@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Menyu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d0d; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; padding: 32px; }
+  .card { background: #1a1a1a; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+  .card img { width: 100%; height: 200px; object-fit: cover; display: block; background: #333; }
+  .card .info { padding: 16px; }
+  .card h2 { font-size: 22px; margin-bottom: 8px; }
+  .card .price { font-size: 24px; font-weight: bold; color: #ffb400; }
+  .empty { text-align: center; padding: 100px 20px; font-size: 28px; color: #777; }
+</style>
+</head>
+<body>
+<div id="menu-grid" class="grid"></div>
+<div id="empty-msg" class="empty" style="display:none;">Hozircha menyu bo'sh</div>
+
+<script>
+async function loadMenu() {
+  try {
+    const res = await fetch('/api/tv-menu/');
+    const items = await res.json();
+    const grid = document.getElementById('menu-grid');
+    const empty = document.getElementById('empty-msg');
+    if (items.length === 0) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    grid.innerHTML = items.map(item => `
+      <div class="card">
+        <img src="${item.image}" alt="${item.name}">
+        <div class="info">
+          <h2>${item.name}</h2>
+          <div class="price">${Number(item.price).toLocaleString('uz-UZ')} so'm</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Menyuni yuklashda xatolik:', e);
+  }
+}
+loadMenu();
+setInterval(loadMenu, 10000); // har 10 soniyada yangilanadi
+</script>
+</body>
+</html>

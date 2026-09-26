@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if item %}Tahrirlash{% else %}Yangi taom{% endif %}</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 16px; margin: 0; }
+  form { background: #fff; padding: 16px; border-radius: 12px; }
+  label { display: block; margin-top: 12px; font-weight: bold; font-size: 14px; }
+  input[type=text], input[type=number] { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+  input[type=file] { margin-top: 6px; }
+  .current-img { width: 100px; border-radius: 8px; margin-top: 8px; display: block; }
+  .actions { margin-top: 20px; display: flex; gap: 10px; }
+  button, .cancel { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 16px; }
+  button { background: #2196f3; color: #fff; }
+  .cancel { background: #eee; text-align: center; text-decoration: none; color: #333; }
+  .delete-btn { background: #e53935; color: #fff; border: none; padding: 12px; border-radius: 10px; width: 100%; margin-top: 12px; }
+</style>
+</head>
+<body>
+<h2>{% if item %}Taomni tahrirlash{% else %}Yangi taom qo'shish{% endif %}</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <label>Nomi</label>
+  <input type="text" name="name" value="{{ item.name|default:'' }}" required>
+  <label>Narxi (so'm)</label>
+  <input type="number" name="price" value="{{ item.price|default:'' }}" required>
+  <label>Tartib raqami (kichigi birinchi chiqadi)</label>
+  <input type="number" name="order" value="{{ item.order|default:0 }}">
+  <label>Rasm {% if item %}(o'zgartirmoqchi bo'lsangina tanlang){% endif %}</label>
+  <input type="file" name="image" accept="image/*" {% if not item %}required{% endif %}>
+  {% if item %}<img class="current-img" src="{{ item.image.url }}">{% endif %}
+  <div class="actions">
+    <button type="submit">Saqlash</button>
+    <a class="cancel" href="{% url 'mobile_panel' %}">Bekor qilish</a>
+  </div>
+</form>
+{% if item %}
+<form method="post" action="{% url 'item_delete' item.id %}" onsubmit="return confirm('Rostdan ham o\'chirilsinmi?');">
+  {% csrf_token %}
+  <button class="delete-btn" type="submit">Taomni o'chirish</button>
+</form>
+{% endif %}
+</body>
+</html>

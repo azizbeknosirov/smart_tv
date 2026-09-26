@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menyu boshqaruvi</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 16px; }
+  h1 { font-size: 20px; margin-bottom: 16px; }
+  .item { display: flex; align-items: center; background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .item img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; margin-right: 12px; }
+  .item .name { flex: 1; font-weight: bold; }
+  .item .price { color: #777; font-size: 14px; margin-right: 12px; }
+  .switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+  .switch input { display: none; }
+  .slider { position: absolute; inset: 0; background: #ccc; border-radius: 28px; cursor: pointer; transition: .2s; }
+  .slider:before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+  input:checked + .slider { background: #4caf50; }
+  input:checked + .slider:before { transform: translateX(22px); }
+  .edit-link { margin-left: 12px; color: #2196f3; text-decoration: none; font-size: 14px; }
+  .add-btn { display: block; text-align: center; background: #2196f3; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; margin-bottom: 16px; }
+  .logout { float: right; color: #e53935; text-decoration: none; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>Menyu boshqaruvi <a class="logout" href="{% url 'mobile_logout' %}">Chiqish</a></h1>
+<a class="add-btn" href="{% url 'item_add' %}">+ Yangi taom qo'shish</a>
+
+{% for item in items %}
+<div class="item" id="item-{{ item.id }}">
+  <img src="{{ item.image.url }}" alt="{{ item.name }}">
+  <div class="name">{{ item.name }}</div>
+  <div class="price">{{ item.price }} so'm</div>
+  <label class="switch">
+    <input type="checkbox" {% if item.is_active %}checked{% endif %} onchange="toggleItem({{ item.id }}, this)">
+    <span class="slider"></span>
+  </label>
+  <a class="edit-link" href="{% url 'item_edit' item.id %}">Tahrirlash</a>
+</div>
+{% empty %}
+<p>Hozircha taomlar yo'q.</p>
+{% endfor %}
+
+<script>
+function getCookie(name) {
+  const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return match ? match.pop() : '';
+}
+async function toggleItem(id, checkbox) {
+  try {
+    const res = await fetch(`/api/items/${id}/toggle/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    });
+    if (!res.ok) throw new Error();
+  } catch (e) {
+    alert('Xatolik yuz berdi, qaytadan urinib ko\'ring');
+    checkbox.checked = !checkbox.checked;
+  }
+}
+</script>
+</body>
+</html>
