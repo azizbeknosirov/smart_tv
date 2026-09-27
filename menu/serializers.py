@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from .models import MenuItem
+from .models import MenuItem, SiteSettings
+
+
+class SiteSettingsSerializer(serializers.ModelSerializer):
+    """TV ekran sozlamalari: kafe nomi va fon rasmi"""
+
+    class Meta:
+        model = SiteSettings
+        fields = ['cafe_name', 'background_image', 'background_opacity']
 
 
 class MenuItemPublicSerializer(serializers.ModelSerializer):

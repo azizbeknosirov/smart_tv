@@ -1,14 +1,37 @@
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import MenuItem
-from .serializers import MenuItemPublicSerializer, MenuItemAdminSerializer
+from .models import MenuItem, SiteSettings
+from .serializers import (
+    MenuItemPublicSerializer,
+    MenuItemAdminSerializer,
+    SiteSettingsSerializer,
+)
+
+
+# ---------- TV ekran sozlamalari (ochiq API) ----------
+class TVSettingsAPIView(APIView):
+    """TV ekran fon rasmi va kafe nomini oladi"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        settings_obj = SiteSettings.load()
+        serializer = SiteSettingsSerializer(settings_obj, context={'request': request})
+        return Response(serializer.data)
 
 
 # ---------- TV uchun ochiq API ----------
@@ -98,3 +121,23 @@ def delete_item_view(request, pk):
     if request.method == 'POST':
         item.delete()
     return redirect('mobile_panel')
+
+
+# ---------- Mobil ilova uchun: TV fon rasmini yuklash ----------
+@api_view(['GET', 'POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def settings_background_view(request):
+    """POST bilan fon rasmini saqlaydi, aks holda hozirgi sozlamalarni qaytaradi"""
+    settings_obj = SiteSettings.load()
+    if request.method == 'POST' and request.FILES.get('background_image'):
+        settings_obj.background_image = request.FILES['background_image']
+        settings_obj.save()
+    return JsonResponse({
+        'cafe_name': settings_obj.cafe_name,
+        'background_image': (
+            request.build_absolute_uri(settings_obj.background_image.url)
+            if settings_obj.background_image else ''
+        ),
+        'background_opacity': settings_obj.background_opacity,
+    })
