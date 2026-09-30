@@ -13,6 +13,11 @@ urlpatterns = [
     path('api/tv-menu/', views.TVMenuAPIView.as_view(), name='tv_menu_api'),
     path('api/tv-settings/', views.TVSettingsAPIView.as_view(), name='tv_settings_api'),
 
+    # PWA (manifest, service worker, ikonkalar)
+    path('manifest.webmanifest', views.pwa_manifest_view, name='pwa_manifest'),
+    path('sw.js', views.pwa_service_worker_view, name='pwa_sw'),
+    path('pwa/<str:name>', views.pwa_icon_view, name='pwa_icon'),
+
     # API (Flutter ilovasi va mobil panel foydalanadi)
     path('api/auth/login/', obtain_auth_token, name='api_login'),
     path('api/', include(router.urls)),

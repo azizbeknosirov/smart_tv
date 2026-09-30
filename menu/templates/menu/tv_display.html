@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <title>Menyu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14100c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/pwa/icon-192.png">
+<link rel="apple-touch-icon" href="/pwa/icon-192.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -24,6 +30,7 @@
     color: var(--cream);
     font-family: 'Segoe UI', Georgia, serif;
     overflow: hidden;
+    cursor: none;
   }
 
   /* Fon rasmi (admin paneldan) — to'liq va o'zgarmas ko'rinadi */
@@ -288,6 +295,32 @@ loadSettings();
 loadMenu();
 setInterval(loadMenu, 10000);      // har 10 soniyada menyu yangilanadi
 setInterval(loadSettings, 60000);  // sozlamalarni ham tekshirib turadi
+
+// --- PWA: service worker ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+// --- Zaxira: PWA sifatida o'rnatilmagan bo'lsa, birinchi bosish / pult tugmasida
+// to'liq ekranga o'tadi (brauzer avtomatik ochishga ruxsat bermaydi) ---
+(function () {
+  const isInstalled =
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: standalone)').matches;
+  if (isInstalled) return;
+  function goFullscreen() {
+    const el = document.documentElement;
+    (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
+    window.removeEventListener('click', goFullscreen);
+    window.removeEventListener('keydown', goFullscreen);
+    window.removeEventListener('touchend', goFullscreen);
+  }
+  window.addEventListener('click', goFullscreen);
+  window.addEventListener('keydown', goFullscreen);
+  window.addEventListener('touchend', goFullscreen);
+})();
 </script>
 </body>
 </html>

@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from rest_framework import viewsets, permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import (
@@ -12,7 +15,7 @@ from rest_framework.views import APIView
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import MenuItem, SiteSettings
@@ -141,3 +144,55 @@ def settings_background_view(request):
         ),
         'background_opacity': settings_obj.background_opacity,
     })
+
+
+# ---------- PWA (TV ekranni "ilova" sifatida to'liq ekranda ochish) ----------
+PWA_DIR = Path(__file__).resolve().parent / 'pwa'
+
+
+def pwa_manifest_view(request):
+    manifest = {
+        'id': '/tv/',
+        'name': 'Susambil TV',
+        'short_name': 'Susambil',
+        'description': 'Milliy taomlar choyxonasi — TV menyu',
+        'start_url': '/tv/',
+        'scope': '/',
+        'display': 'fullscreen',
+        'display_override': ['fullscreen', 'standalone'],
+        'orientation': 'landscape',
+        'background_color': '#14100c',
+        'theme_color': '#14100c',
+        'lang': 'uz',
+        'icons': [
+            {'src': '/pwa/icon-192.png', 'sizes': '192x192', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/pwa/icon-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/pwa/icon-maskable-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'},
+        ],
+    }
+    return HttpResponse(
+        json.dumps(manifest, ensure_ascii=False),
+        content_type='application/manifest+json',
+    )
+
+
+def pwa_service_worker_view(request):
+    # Service worker ildiz ("/") scope'da ishlashi uchun aynan /sw.js dan beriladi
+    response = HttpResponse(
+        (PWA_DIR / 'sw.js').read_text(encoding='utf-8'),
+        content_type='application/javascript',
+    )
+    response['Cache-Control'] = 'no-cache'
+    response['Service-Worker-Allowed'] = '/'
+    return response
+
+
+PWA_ICONS = {'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'}
+
+
+def pwa_icon_view(request, name):
+    if name not in PWA_ICONS:
+        raise Http404
+    response = FileResponse(open(PWA_DIR / name, 'rb'), content_type='image/png')
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
