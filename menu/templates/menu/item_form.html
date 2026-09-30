@@ -24,6 +24,8 @@
   {% csrf_token %}
   <label>Nomi</label>
   <input type="text" name="name" value="{{ item.name|default:'' }}" required>
+  <label>Tavsif (ixtiyoriy)</label>
+  <input type="text" name="description" value="{{ item.description|default:'' }}" maxlength="255" placeholder="Masalan: mol go'shti, guruch, sabzi">
   <label>Narxi (so'm)</label>
   <input type="number" name="price" value="{{ item.price|default:'' }}" required>
   <label>Tartib raqami (kichigi birinchi chiqadi)</label>

@@ -37,6 +37,7 @@ class SiteSettings(models.Model):
 
 class MenuItem(models.Model):
     name = models.CharField('Nomi', max_length=200)
+    description = models.CharField('Tavsif', max_length=255, blank=True, default='')
     price = models.DecimalField('Narxi (so\'m)', max_digits=10, decimal_places=0)
     image = models.ImageField('Rasm', upload_to='menu_images/')
     is_active = models.BooleanField('Ko\'rinadimi', default=True)

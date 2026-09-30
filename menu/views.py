@@ -96,6 +96,7 @@ def add_item_view(request):
     if request.method == 'POST':
         MenuItem.objects.create(
             name=request.POST.get('name'),
+            description=(request.POST.get('description') or '').strip(),
             price=request.POST.get('price') or 0,
             image=request.FILES.get('image'),
             order=request.POST.get('order') or 0,
@@ -109,6 +110,7 @@ def edit_item_view(request, pk):
     item = get_object_or_404(MenuItem, pk=pk)
     if request.method == 'POST':
         item.name = request.POST.get('name')
+        item.description = (request.POST.get('description') or '').strip()
         item.price = request.POST.get('price') or 0
         item.order = request.POST.get('order') or 0
         if request.FILES.get('image'):

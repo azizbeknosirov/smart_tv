@@ -126,12 +126,21 @@
     min-width: 0;
   }
   .info h2 {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--cream);
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .desc {
+    color: var(--muted);
+    line-height: 1.25;
+    margin-bottom: 5px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
   .price {
     display: inline-block;
@@ -240,10 +249,11 @@ function applyLayout(n) {
   const scale = Math.max(0.45, Math.min(1, cardW / 300));
   document.documentElement.style.setProperty('--card-w', cardW + 'px');
   document.documentElement.style.setProperty('--card-h', cardH + 'px');
-  document.documentElement.style.setProperty('--img-h', (cardH * 0.6) + 'px');
-  document.documentElement.style.setProperty('--title-size', (22 * scale) + 'px');
-  document.documentElement.style.setProperty('--price-size', (19 * scale) + 'px');
-  document.documentElement.style.setProperty('--price-pad', (4 * scale) + 'px ' + (16 * scale) + 'px');
+  document.documentElement.style.setProperty('--img-h', (cardH * 0.55) + 'px');
+  document.documentElement.style.setProperty('--title-size', (30 * scale) + 'px');
+  document.documentElement.style.setProperty('--desc-size', Math.max(9, 13 * scale) + 'px');
+  document.documentElement.style.setProperty('--price-size', (16 * scale) + 'px');
+  document.documentElement.style.setProperty('--price-pad', (3 * scale) + 'px ' + (14 * scale) + 'px');
 }
 
 let currentCount = 0;
@@ -275,6 +285,7 @@ async function loadMenu() {
         </div>
         <div class="info">
           <h2 style="font-size: var(--title-size);">${escapeHtml(item.name)}</h2>
+          ${item.description ? `<div class="desc" style="font-size: var(--desc-size);">${escapeHtml(item.description)}</div>` : ''}
           <div class="price" style="font-size: var(--price-size); padding: var(--price-pad);">
             ${Number(item.price).toLocaleString('uz-UZ')} <small>so'm</small>
           </div>
