@@ -37,12 +37,12 @@
     z-index: 0;
     display: none;
   }
-  .page { position: relative; z-index: 2; height: 100vh; display: flex; flex-direction: column; }
+  .page { position: relative; z-index: 2; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
   /* Sarlavha */
   header {
     text-align: center;
-    padding: 26px 20px 10px;
+    padding: 22px 20px 8px;
     flex-shrink: 0;
   }
   header .line {
@@ -51,7 +51,7 @@
   header .rule { height: 2px; width: 90px; background: linear-gradient(90deg, transparent, var(--gold)); border-radius: 2px; }
   header .rule:last-child { background: linear-gradient(270deg, transparent, var(--gold)); }
   h1 {
-    font-size: 44px;
+    font-size: 40px;
     letter-spacing: 3px;
     color: var(--gold);
     text-transform: uppercase;
@@ -61,38 +61,35 @@
   header .sub {
     margin-top: 4px;
     color: var(--muted);
-    font-size: 16px;
+    font-size: 15px;
     letter-spacing: 6px;
     text-transform: uppercase;
   }
 
-  /* Menyu grid */
-  .grid {
+  /* Menyu grid — JS orqali o'lchamlari dinamik hisoblanadi, SKROLL YO'Q */
+  #menu-grid {
     flex: 1;
-    overflow-y: auto;
+    min-height: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 26px;
-    padding: 24px 48px 40px;
-    align-content: start;
+    justify-content: center;
+    align-content: center;
+    gap: 18px;
+    padding: 10px 32px 28px;
   }
-  .grid::-webkit-scrollbar { width: 8px; }
-  .grid::-webkit-scrollbar-thumb { background: rgba(232,176,75,.35); border-radius: 8px; }
 
   .card {
     background: var(--card-bg);
     border: 1px solid rgba(232, 176, 75, .22);
-    border-radius: 18px;
+    border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 8px 26px rgba(0,0,0,.45);
+    display: flex;
+    flex-direction: column;
     animation: fadeIn .5s ease both;
-    transition: transform .25s ease, border-color .25s ease;
   }
-  .card:hover { transform: translateY(-4px); border-color: rgba(232,176,75,.55); }
 
-  /* Rasm maydoni — rasm TO'LIQ ko'rinadi (qirqilmaydi) */
+  /* Rasm maydoni — rasm TO'LIQ ko'rinadi (qirqilmaydi), balandligi JS orqali beriladi */
   .img-wrap {
-    height: 230px;
     background:
       radial-gradient(ellipse at center, rgba(232,176,75,.08), transparent 65%),
       var(--card-img-bg);
@@ -101,6 +98,7 @@
     justify-content: center;
     overflow: hidden;
     border-bottom: 1px solid rgba(232,176,75,.18);
+    flex-shrink: 0;
   }
   .img-wrap img {
     max-width: 100%;
@@ -111,19 +109,33 @@
     display: block;
   }
 
-  .info { padding: 16px 20px 18px; text-align: center; }
-  .info h2 { font-size: 23px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+  .info {
+    padding: 10px 14px 12px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+  .info h2 {
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .price {
     display: inline-block;
-    font-size: 22px;
     font-weight: bold;
     color: var(--gold);
     background: rgba(232,176,75,.12);
     border: 1px solid rgba(232,176,75,.3);
-    padding: 4px 18px;
     border-radius: 999px;
+    align-self: center;
   }
-  .price small { font-size: 14px; font-weight: normal; color: var(--muted); }
+  .price small { font-weight: normal; color: var(--muted); }
 
   .empty {
     text-align: center; padding: 120px 20px; font-size: 28px; color: var(--muted);
@@ -146,7 +158,7 @@
     </div>
     <div class="sub">Milliy taomlar choyxonasi</div>
   </header>
-  <div id="menu-grid" class="grid"></div>
+  <div id="menu-grid"></div>
   <div id="empty-msg" class="empty" style="display:none;">Hozircha menyu bo'sh</div>
 </div>
 
@@ -173,6 +185,61 @@ async function loadSettings() {
   } catch (e) { /* sozlamalar yuklanmasa ham menyu ishlayveradi */ }
 }
 
+// --- Taomlar sig'adigan darajada avtomatik kichiklashadigan jadval ---
+// Berilgan N ta karta uchun, mavjud maydonga ENG YAXSHI sig'adigan
+// ustun/qator sonini va karta o'lchamini hisoblaydi (skroll shart emas).
+const CARD_ASPECT = 0.95;        // karta eni/bo'yi nisbati (rasm+matn birga)
+const MAX_COLS = 10;             // bitta qatorda undan ko'p karta bo'lmasin
+const MIN_CARD_W = 110;          // karta juda kichrayib ketmasin
+
+function computeLayout(n, containerW, containerH) {
+  let best = null;
+  const maxCols = Math.min(MAX_COLS, n);
+  for (let cols = 1; cols <= maxCols; cols++) {
+    const rows = Math.ceil(n / cols);
+    const gapW = 16 * (cols - 1);
+    const gapH = 16 * (rows - 1);
+    let cardW = (containerW - gapW) / cols;
+    let cardH = cardW / CARD_ASPECT;
+    if (cardH * rows + gapH > containerH) {
+      cardH = (containerH - gapH) / rows;
+      cardW = cardH * CARD_ASPECT;
+    }
+    if (cardW < MIN_CARD_W) continue;
+    const area = cardW * cardH;
+    if (!best || area > best.area) {
+      best = { cols, cardW, cardH, area };
+    }
+  }
+  // Juda ko'p taom bo'lib, hech biri chiroyli sig'masa —
+  // baribir MAX_COLS ustunga, balandlikka moslab joylaymiz
+  if (!best) {
+    const cols = maxCols;
+    const rows = Math.ceil(n / cols);
+    const cardH = (containerH - 16 * (rows - 1)) / rows;
+    const cardW = cardH * CARD_ASPECT;
+    best = { cols, cardW, cardH };
+  }
+  return best;
+}
+
+function applyLayout(n) {
+  const grid = document.getElementById('menu-grid');
+  const rect = grid.getBoundingClientRect();
+  const { cols, cardW, cardH } = computeLayout(n, rect.width, rect.height);
+
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${cardW}px)`;
+
+  const scale = Math.max(0.45, Math.min(1, cardW / 300));
+  document.documentElement.style.setProperty('--card-w', cardW + 'px');
+  document.documentElement.style.setProperty('--card-h', cardH + 'px');
+  document.documentElement.style.setProperty('--img-h', (cardH * 0.6) + 'px');
+  document.documentElement.style.setProperty('--title-size', (22 * scale) + 'px');
+  document.documentElement.style.setProperty('--price-size', (19 * scale) + 'px');
+  document.documentElement.style.setProperty('--price-pad', (4 * scale) + 'px ' + (16 * scale) + 'px');
+}
+
+let currentCount = 0;
 let lastSignature = '';
 
 async function loadMenu() {
@@ -182,8 +249,9 @@ async function loadMenu() {
     const grid = document.getElementById('menu-grid');
     const empty = document.getElementById('empty-msg');
     const signature = JSON.stringify(items);
-    if (signature === lastSignature) return; // o'zgarmasa qayta chizmaymiz (animatsiya uchun)
+    if (signature === lastSignature) return; // o'zgarmasa qayta chizmaymiz
     lastSignature = signature;
+    currentCount = items.length;
 
     if (items.length === 0) {
       grid.innerHTML = '';
@@ -192,23 +260,34 @@ async function loadMenu() {
     }
     empty.style.display = 'none';
     grid.innerHTML = items.map((item, i) => `
-      <div class="card" style="animation-delay:${Math.min(i * 60, 600)}ms">
-        <div class="img-wrap"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}"></div>
+      <div class="card" style="
+          width: var(--card-w); height: var(--card-h);
+          animation-delay:${Math.min(i * 50, 500)}ms;">
+        <div class="img-wrap" style="height: var(--img-h);">
+          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+        </div>
         <div class="info">
-          <h2>${escapeHtml(item.name)}</h2>
-          <div class="price">${Number(item.price).toLocaleString('uz-UZ')} <small>so'm</small></div>
+          <h2 style="font-size: var(--title-size);">${escapeHtml(item.name)}</h2>
+          <div class="price" style="font-size: var(--price-size); padding: var(--price-pad);">
+            ${Number(item.price).toLocaleString('uz-UZ')} <small>so'm</small>
+          </div>
         </div>
       </div>
     `).join('');
+    applyLayout(currentCount);
   } catch (e) {
     console.error('Menyuni yuklashda xatolik:', e);
   }
 }
 
+window.addEventListener('resize', () => {
+  if (currentCount > 0) applyLayout(currentCount);
+});
+
 loadSettings();
 loadMenu();
-setInterval(loadMenu, 10000);   // har 10 soniyada menyu yangilanadi
-setInterval(loadSettings, 60000); // sozlamalarni ham tekshirib turadi
+setInterval(loadMenu, 10000);      // har 10 soniyada menyu yangilanadi
+setInterval(loadSettings, 60000);  // sozlamalarni ham tekshirib turadi
 </script>
 </body>
 </html>
