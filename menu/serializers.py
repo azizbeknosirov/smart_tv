@@ -21,6 +21,10 @@ class MenuItemPublicSerializer(serializers.ModelSerializer):
 class MenuItemAdminSerializer(serializers.ModelSerializer):
     """Mobil panel API uchun (agar kelajakda mobil ilova qilsangiz kerak bo'ladi)"""
 
+    # Multipart/form-data da maydon yuborilmasa DRF boolean'ni False qilib qo'yadi
+    # va yangi taom TV ekranda ko'rinmay qoladi. Standart holat — ko'rinadigan.
+    is_active = serializers.BooleanField(default=True)
+
     class Meta:
         model = MenuItem
         fields = '__all__'
