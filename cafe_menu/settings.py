@@ -8,6 +8,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-ozgartiring')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']  # Railway'ga chiqarganda domeningizni yozing
 
+# Railway TLS'ni o'zi tugatadi — Django buni bila turishi kerak,
+# aks holda API rasm manzillarini http:// bilan qaytaradi (Android bloklaydi).
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
